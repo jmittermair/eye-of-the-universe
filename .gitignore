@@ -1,0 +1,8 @@
+result
+result-*
+.direnv/
+*.qcow2
+*.raw
+*.key
+*.jwe
+.env

@@ -1,0 +1,16 @@
+# Copy to ~/.config/containers/systemd/whoami.container to opt in.
+# For reproducible deployments, replace the version tag with an image digest.
+[Unit]
+Description=Local container smoke test
+
+[Container]
+Image=docker.io/traefik/whoami:v1.11.0
+PublishPort=127.0.0.1:8080:80
+NoNewPrivileges=true
+DropCapability=all
+
+[Service]
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
