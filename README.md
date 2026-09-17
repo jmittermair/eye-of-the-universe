@@ -19,7 +19,7 @@ captured by the outer module, without global `specialArgs` plumbing.
 - `modules/hosts/thestranger/default.nix`: host composition and hardware profile.
 - `modules/hosts/thestranger/facter.json`: replace the empty scaffold on the laptop.
 - `modules/features/`: system and user features grouped by purpose.
-- `assets/wallpaper.svg`: local Mocha wallpaper, converted to PNG for awww.
+- `assets/wallpaper.svg`: optional local Mocha wallpaper source (automatic conversion is disabled).
 - `examples/quadlets/`: opt-in rootless container example.
 - `tests/eval.nix`: full derivation evaluation with only the two installation prerequisites omitted.
 
@@ -126,15 +126,33 @@ Do not run disk commands on the development Mac.
 ## Desktop
 
 MangoWM/MangoWC handles windows; Noctalia v5 provides notifications and desktop
-controls. Waybar is the visible bar. Walker uses Elephant for applications,
-calculator, commands and symbols. Cliphist owns clipboard history; awww owns
+controls and the application launcher. Waybar is the visible bar. Walker remains
+disabled after crates.io download failures; Noctalia also presents the Cliphist
+picker through its dmenu interface. Cliphist owns clipboard history; awww owns
 wallpaper; gammastep owns gamma adjustment. Noctalia's overlapping services and
 application theme writing are disabled so Stylix remains authoritative.
 
 See [SHORTCUTS.md](SHORTCUTS.md) for the complete keyboard and mouse reference,
 or press **Super+F1** to open it in Ghostty. Common entry points are Super+Enter
-for the terminal, Super+Space for Walker, Super+comma for Noctalia, and
+for the terminal, Super+Space for Noctalia's launcher, Super+comma for its control centre, and
 Super+Shift+L to lock.
+
+The built-in `eDP-1` panel uses its native mode at **1.5× scale**. Applications and
+popups use 13-point fonts, Ghostty 14-point, and the cursor is 32 pixels. Waybar has
+a 42-pixel bar with 16-pixel text, clearer spacing and only essential status items;
+CPU/RAM monitoring remains available in Noctalia or `btop`. Noctalia uses solid
+floating panels with an additional 1.1× UI scale. This adapts the restrained
+decoration and panel styling in
+[mikuri12's configuration](https://github.com/mikuri12/my-nixos-config), while
+retaining Mocha, Waybar and larger controls for this laptop.
+
+Apply with `nh os switch`, then log out and back in to reload all desktop services.
+For immediate relief before rebuilding, run `wlr-randr --output eDP-1 --scale 1.5`.
+For larger scaling, change `scale:1.5` to `scale:2` in `desktop.nix`; external
+monitors are not affected by this rule. Use `wlr-randr` to confirm the output name.
+Noctalia's GUI overrides in `~/.config/noctalia/settings.toml` take precedence over
+declarative defaults; check those if its appearance does not update. The changes
+do not reset your personal settings or update the lockfile.
 
 The session imports Wayland variables before starting user services, and stops
 the graphical targets on logout. Swayidle locks after 10 minutes and before sleep.
@@ -144,7 +162,7 @@ own idle rules are not enabled. Gammastep uses Melbourne coordinates with
 
 Grimblast is installed as requested, but it relies on Hyprland-specific interfaces.
 The working Mango binding therefore uses grim + slurp + Satty. Firefox is the default
-browser; Brave is also installed. The wallpaper starts with the repository asset;
+browser; Brave is also installed. Automatic wallpaper conversion remains disabled;
 use `awww img /path/to/image.png` for a session change.
 
 Cliphist persists copied content under your encrypted home. Use `cliphist wipe`
@@ -220,6 +238,9 @@ rustup component add clippy rustfmt rust-src
 ```
 
 Prefer a committed `rust-toolchain.toml` or project flake for project reproducibility.
+Nixvim is currently disabled (`_editor.nix` and the commented host import) following
+crates.io HTTP 403 failures. The following describes the prepared editor setup
+when re-enabled; this desktop refresh does not enable it.
 Neovim is configured through Nixvim with Rust, Go, Python, YAML/Kubernetes, Nix,
 TOML, Bash and JSON language servers; completion, Treesitter, Telescope, Git signs
 and explicit formatting (`Space f`). `Space ff` finds files; `Space fg` searches;

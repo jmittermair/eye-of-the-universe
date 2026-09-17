@@ -47,6 +47,18 @@
     }:
     let
       noctalia = lib.getExe config.programs.noctalia.package;
+      clipboard = pkgs.writeShellApplication {
+        name = "clipboard-pick";
+        runtimeInputs = with pkgs; [
+          cliphist
+          wl-clipboard
+        ];
+        text = ''
+          entry=$(cliphist list | ${noctalia} dmenu --prompt "Clipboard") || exit 0
+          [ -n "$entry" ] || exit 0
+          printf '%s' "$entry" | cliphist decode | wl-copy
+        '';
+      };
       screenshot = pkgs.writeShellApplication {
         name = "screenshot";
         runtimeInputs = with pkgs; [
@@ -63,48 +75,15 @@
             --output-filename "$HOME/Pictures/Screenshots/$(date +%Y%m%d-%H%M%S).png"
         '';
       };
-#      clipboard = pkgs.writeShellApplication {
-#        name = "clipboard-pick";
-#        runtimeInputs = with pkgs; [
-#          cliphist
-#          wl-clipboard
-#        ];
-#        text = ''
-#          entry=$(cliphist list) || exit 0 # --dmenu) || exit 0
-#          [ -n "$entry" ] || exit 0
-#          printf '%s' "$entry" | cliphist dec`ode | wl-copy
-#        '';
-#      };
-#      wallpaper = pkgs.runCommand "thestranger-wallpaper.png" { nativeBuildInputs = [ pkgs.librsvg ]; } ''
-#        rsvg-convert ${../../assets/wallpaper.svg} -o "$out"
-#      '';
-#      applyWallpaper = pkgs.writeShellApplication {
-#        name = "apply-wallpaper";
-#        runtimeInputs = [
-#          pkgs.awww
-#          pkgs.coreutils
-#        ];
-#        text = ''
-#          for attempt in $(seq 1 50); do
-#            if awww query >/dev/null 2>&1; then
-#              exec awww img ${wallpaper}
-#            fi
-#            sleep 0.1
-#          done
-#          echo "awww daemon did not become ready" >&2
-#          exit 1
-#        '';
-#      };
     in
     {
       imports = [
         inputs.mango.hmModules.mango
         inputs.noctalia.homeModules.default
-#        inputs.walker.homeManagerModules.default
       ];
       home.packages = [
         screenshot
-#        clipboard
+        clipboard
         pkgs.awww
         pkgs.wlr-randr
       ];
@@ -116,7 +95,9 @@
         # Nonempty autostart is needed for the upstream module to emit exec-once.
         autostart_sh = "true";
         settings = {
-          monitorrule= "name:eDP-1:width:1920,height:1080,refresh:60,x0,y:0,scale:1.5";
+          # Keep the panel's native mode; scale the interface, not its resolution.
+          # Comma-separated fields are required; "name:eDP-1:width:..." never matches.
+          monitorrule = "name:eDP-1,scale:1.5";
           xkb_rules_layout = "us";
           repeat_rate = 35;
           repeat_delay = 300;
@@ -124,11 +105,18 @@
           trackpad_natural_scrolling = 1;
           trackpad_disable_while_typing = 1;
           borderpx = 2;
-          border_radius = 8;
-          gappih = 6;
-          gappiv = 6;
-          gappoh = 8;
-          gappov = 8;
+          border_radius = 6;
+          cursor_size = 32;
+          focused_opacity = 1.0;
+          unfocused_opacity = 1.0;
+          shadows = 1;
+          shadow_only_floating = 1;
+          shadows_size = 5;
+          shadows_blur = 5;
+          gappih = 8;
+          gappiv = 8;
+          gappoh = 10;
+          gappov = 10;
           animations = 1;
           animation_duration_open = 180;
           animation_duration_close = 150;
@@ -141,8 +129,8 @@
           bind = [
             # Application launchers and this configuration's shortcut reference.
             "SUPER,Return,spawn,ghostty"
-            "SUPER,space,spawn,walker"
-            "ALT,space,spawn,walker"
+            "SUPER,space,spawn,${noctalia} msg panel-toggle launcher"
+            "ALT,space,spawn,${noctalia} msg panel-toggle launcher"
             "SUPER,e,spawn,nautilus"
             "SUPER,b,spawn,firefox"
             "SUPER,F1,spawn,ghostty -e bat --paging=always --style=plain ${../../SHORTCUTS.md}"
@@ -218,7 +206,26 @@
         enable = true;
         systemd.enable = true;
         settings = {
-          shell.clipboard_enabled = false;
+          shell = {
+            clipboard_enabled = false;
+            font_family = "DejaVu Sans";
+            corner_radius_scale = 0.8;
+            popup_shadows = true;
+            settings_window_translucent = false;
+            # Inspired by mikuri12's solid floating panels, with larger controls.
+            panel = {
+              transparency_mode = "solid";
+              launcher_placement = "floating";
+              control_center_placement = "floating";
+              session_placement = "floating";
+            };
+            launcher = {
+              compact = true;
+              categories = false;
+              show_app_origin_indicator = false;
+            };
+          };
+          accessibility.ui_scale = 1.1;
           bar.default.enabled = false;
           bar.main.enabled = false;
           dock.enabled = false;
@@ -235,30 +242,58 @@
           };
         };
       };
-#      programs.walker = {
-#        enable = false;
-#        runAsService = true;
-#        config = {
-#          theme = "default";
-#          close_when_open = true;
-#        };
-#        elephant.providers = [
-#          "desktopapplications"
-#          "calc"
-#          "runner"
-#          "symbols"
-#        ];
-#      };
       programs.waybar = {
         enable = true;
         systemd = {
           enable = true;
           targets = [ "mango-session.target" ];
         };
+        # Own Waybar's CSS here so spacing and contrast are consistent with Noctalia.
+        style = ''
+          * {
+            font-family: "DejaVu Sans", "Symbols Nerd Font Mono";
+            font-size: 16px;
+            border: none;
+            border-radius: 0;
+            min-height: 0;
+          }
+          window#waybar {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            border: 1px solid #45475a;
+            border-radius: 12px;
+          }
+          tooltip {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            border: 1px solid #585b70;
+            border-radius: 8px;
+          }
+          #custom-launcher, #custom-control, #clock, #idle_inhibitor,
+          #pulseaudio, #network, #battery, #tray {
+            padding: 0 10px;
+            margin: 4px 0;
+            border-radius: 8px;
+          }
+          #custom-launcher { color: #cba6f7; margin-left: 4px; }
+          #custom-control { margin-right: 4px; }
+          #clock { font-weight: bold; }
+          #taskbar button { padding: 0 8px; margin: 4px 2px; border-radius: 8px; }
+          #taskbar button.active { background: #313244; }
+          #taskbar button:hover, #custom-launcher:hover, #custom-control:hover,
+          #pulseaudio:hover, #network:hover { background: #45475a; }
+          #battery.warning { color: #f9e2af; }
+          #battery.critical { background: #f38ba8; color: #1e1e2e; }
+          #idle_inhibitor.activated { color: #a6e3a1; }
+        '';
         settings.main = {
           layer = "top";
           position = "top";
-          height = 32;
+          height = 42;
+          margin-top = 8;
+          margin-left = 10;
+          margin-right = 10;
+          spacing = 4;
           modules-left = [
             "custom/launcher"
             "wlr/taskbar"
@@ -268,16 +303,14 @@
             "idle_inhibitor"
             "pulseaudio"
             "network"
-            "cpu"
-            "memory"
             "battery"
             "tray"
             "custom/control"
           ];
           "custom/launcher" = {
-            format = "󱄅";
+            format = "󱄅  Apps";
             tooltip = false;
-            on-click = "walker";
+            on-click = "${noctalia} msg panel-toggle launcher";
           };
           "custom/control" = {
             format = "󰒓";
@@ -286,6 +319,9 @@
           };
           "wlr/taskbar" = {
             format = "{icon}";
+            icon-size = 22;
+            spacing = 2;
+            tooltip-format = "{title}";
             on-click = "activate";
             on-click-middle = "close";
           };
@@ -308,7 +344,8 @@
             };
           };
           network = {
-            format-wifi = "󰖩 {essid}";
+            format-wifi = "󰖩";
+            tooltip-format-wifi = "{essid} · {signalStrength}%";
             format-ethernet = "󰈀";
             format-disconnected = "Offline";
             on-click = "${noctalia} msg panel-toggle control-center";
@@ -318,9 +355,10 @@
             format-muted = "󰖁";
             on-click = "pavucontrol";
           };
-          cpu.format = "CPU {usage}%";
-          memory.format = "RAM {}%";
-          tray.spacing = 8;
+          tray = {
+            spacing = 10;
+            icon-size = 20;
+          };
           idle_inhibitor.format = "{icon}";
           idle_inhibitor.format-icons = {
             activated = "󰅶";
@@ -367,7 +405,6 @@
         };
         Service = {
           ExecStart = "${pkgs.awww}/bin/awww-daemon";
-#          ExecStartPost = lib.getExe applyWallpaper;
           Restart = "on-failure";
         };
         Install.WantedBy = [ "mango-session.target" ];

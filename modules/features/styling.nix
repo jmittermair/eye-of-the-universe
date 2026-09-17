@@ -25,16 +25,16 @@
           name = "Noto Color Emoji";
         };
         sizes = {
-          applications = 11;
-          desktop = 11;
-          terminal = 12;
-          popups = 11;
+          applications = 13;
+          desktop = 13;
+          terminal = 14;
+          popups = 13;
         };
       };
       cursor = {
         package = pkgs.bibata-cursors;
         name = "Bibata-Modern-Ice";
-        size = 24;
+        size = 32;
       };
     };
     fonts.packages = with pkgs; [
@@ -49,7 +49,9 @@
     ];
   };
   flake.modules.homeManager.styling = {
+    home.pointerCursor.enable = true;
     stylix.targets.nixvim.enable = false;
+    stylix.targets.waybar.enable = false;
     stylix.targets.firefox.profileNames = [ "default" ];
   };
 }

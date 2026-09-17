@@ -11,15 +11,16 @@ to close the terminal pager.
 | Shortcut | Action |
 | --- | --- |
 | Super+Enter | Open Ghostty |
-| Super+Space or Alt+Space | Toggle Walker application/command launcher |
+| Super+Space or Alt+Space | Toggle Noctalia's application launcher |
 | Super+E | Open Files (Nautilus) |
 | Super+B | Open Firefox |
 | Super+F1 | Open this reference in Ghostty |
 | Super+V | Pick an item from Cliphist and copy it to the clipboard |
 | Print or Super+Shift+S | Select a screenshot region and annotate it in Satty |
 
-In Walker, type to search, use Up/Down to select, Enter to activate, and Escape to
-close. The clipboard picker copies the selected entry; paste it into your app
+In Noctalia's launcher, type to search, use Up/Down to select, Enter to activate, and Escape to
+close. The clipboard picker uses Noctalia's dmenu interface to select a Cliphist
+entry and copy it; paste it into your app
 normally. Escape cancels screenshot region selection. Saved screenshots go to
 `~/Pictures/Screenshots/`.
 
@@ -106,7 +107,7 @@ the key symbols emitted by your keyboard.
 | Middle-click a Waybar task icon | Close that window |
 | Click Waybar's idle-inhibitor icon | Toggle inhibition of idle locking |
 | Click Waybar's volume indicator | Open audio controls (Pavucontrol) |
-| Click Waybar's launcher / control icon | Open Walker / Noctalia control centre |
+| Click Waybar's launcher / control icon | Open Noctalia launcher / control centre |
 
 Idle inhibition does not replace the explicit lock shortcut or the lock before
 sleep. Swayidle normally locks after ten minutes.
