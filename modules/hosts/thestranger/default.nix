@@ -17,6 +17,7 @@ in
       ({ lib, pkgs, ... }: {
         nixpkgs.hostPlatform = "x86_64-linux";
         networking.hostName = "thestranger";
+        thestranger.diskDevice = "/dev/disk/by-id/nvme-Samsung_SSD_970_EVO_500GB_S466NX0K420312N";
         boot.kernelPackages = pkgs.linuxPackages_latest;
         boot.loader.systemd-boot = {
           enable = true;
@@ -44,7 +45,7 @@ in
           home.shell
           home.development
           home.kubernetes
-          home.editor
+#          home.editor
           home.apps
           home.styling
         ];

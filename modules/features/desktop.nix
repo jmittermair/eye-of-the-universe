@@ -63,48 +63,48 @@
             --output-filename "$HOME/Pictures/Screenshots/$(date +%Y%m%d-%H%M%S).png"
         '';
       };
-      clipboard = pkgs.writeShellApplication {
-        name = "clipboard-pick";
-        runtimeInputs = with pkgs; [
-          cliphist
-          wl-clipboard
-        ];
-        text = ''
-          entry=$(cliphist list | ${lib.getExe config.programs.walker.package} --dmenu) || exit 0
-          [ -n "$entry" ] || exit 0
-          printf '%s' "$entry" | cliphist decode | wl-copy
-        '';
-      };
-      wallpaper = pkgs.runCommand "thestranger-wallpaper.png" { nativeBuildInputs = [ pkgs.librsvg ]; } ''
-        rsvg-convert ${../../assets/wallpaper.svg} -o "$out"
-      '';
-      applyWallpaper = pkgs.writeShellApplication {
-        name = "apply-wallpaper";
-        runtimeInputs = [
-          pkgs.awww
-          pkgs.coreutils
-        ];
-        text = ''
-          for attempt in $(seq 1 50); do
-            if awww query >/dev/null 2>&1; then
-              exec awww img ${wallpaper}
-            fi
-            sleep 0.1
-          done
-          echo "awww daemon did not become ready" >&2
-          exit 1
-        '';
-      };
+#      clipboard = pkgs.writeShellApplication {
+#        name = "clipboard-pick";
+#        runtimeInputs = with pkgs; [
+#          cliphist
+#          wl-clipboard
+#        ];
+#        text = ''
+#          entry=$(cliphist list) || exit 0 # --dmenu) || exit 0
+#          [ -n "$entry" ] || exit 0
+#          printf '%s' "$entry" | cliphist dec`ode | wl-copy
+#        '';
+#      };
+#      wallpaper = pkgs.runCommand "thestranger-wallpaper.png" { nativeBuildInputs = [ pkgs.librsvg ]; } ''
+#        rsvg-convert ${../../assets/wallpaper.svg} -o "$out"
+#      '';
+#      applyWallpaper = pkgs.writeShellApplication {
+#        name = "apply-wallpaper";
+#        runtimeInputs = [
+#          pkgs.awww
+#          pkgs.coreutils
+#        ];
+#        text = ''
+#          for attempt in $(seq 1 50); do
+#            if awww query >/dev/null 2>&1; then
+#              exec awww img ${wallpaper}
+#            fi
+#            sleep 0.1
+#          done
+#          echo "awww daemon did not become ready" >&2
+#          exit 1
+#        '';
+#      };
     in
     {
       imports = [
         inputs.mango.hmModules.mango
         inputs.noctalia.homeModules.default
-        inputs.walker.homeManagerModules.default
+#        inputs.walker.homeManagerModules.default
       ];
       home.packages = [
         screenshot
-        clipboard
+#        clipboard
         pkgs.awww
         pkgs.wlr-randr
       ];
@@ -116,6 +116,7 @@
         # Nonempty autostart is needed for the upstream module to emit exec-once.
         autostart_sh = "true";
         settings = {
+          monitorrule= "name:eDP-1:width:1920,height:1080,refresh:60,x0,y:0,scale:1.5";
           xkb_rules_layout = "us";
           repeat_rate = 35;
           repeat_delay = 300;
@@ -234,20 +235,20 @@
           };
         };
       };
-      programs.walker = {
-        enable = true;
-        runAsService = true;
-        config = {
-          theme = "default";
-          close_when_open = true;
-        };
-        elephant.providers = [
-          "desktopapplications"
-          "calc"
-          "runner"
-          "symbols"
-        ];
-      };
+#      programs.walker = {
+#        enable = false;
+#        runAsService = true;
+#        config = {
+#          theme = "default";
+#          close_when_open = true;
+#        };
+#        elephant.providers = [
+#          "desktopapplications"
+#          "calc"
+#          "runner"
+#          "symbols"
+#        ];
+#      };
       programs.waybar = {
         enable = true;
         systemd = {
@@ -366,7 +367,7 @@
         };
         Service = {
           ExecStart = "${pkgs.awww}/bin/awww-daemon";
-          ExecStartPost = lib.getExe applyWallpaper;
+#          ExecStartPost = lib.getExe applyWallpaper;
           Restart = "on-failure";
         };
         Install.WantedBy = [ "mango-session.target" ];

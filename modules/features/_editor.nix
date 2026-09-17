@@ -58,16 +58,16 @@
             };
           };
           servers = {
-            rust_analyzer = {
-              enable = true;
-              installCargo = false;
-              installRustc = false;
-              settings."rust-analyzer" = {
-                check.command = "clippy";
-                cargo.allFeatures = true;
-                procMacro.enable = true;
-              };
-            };
+#            rust_analyzer = {
+#              enable = true;
+#              installCargo = false;
+#              installRustc = false;
+#              settings."rust-analyzer" = {
+#                check.command = "clippy";
+#                cargo.allFeatures = true;
+#                procMacro.enable = true;
+#              };
+#            };
             gopls.enable = true;
             basedpyright.enable = true;
             ruff.enable = true;
@@ -92,7 +92,7 @@
         conform-nvim = {
           enable = true;
           settings.formatters_by_ft = {
-            rust = [ "rustfmt" ];
+#            rust = [ "rustfmt" ];
             go = [ "gofmt" ];
             python = [ "ruff_format" ];
             nix = [ "nixfmt" ];

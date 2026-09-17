@@ -1,15 +1,15 @@
 {
   flake.modules.homeManager.shell = { pkgs, ... }: {
     home.packages = with pkgs; [
-      dust
-      duf
+#      dust
+#      duf
       procs
       sd
-      tokei
+#      tokei
       hyperfine
       watchexec
       just
-      xh
+#      xh
       ouch
       jq
       yq-go
@@ -21,7 +21,7 @@
       p7zip
       rsync
       rclone
-      uutils-coreutils
+#      uutils-coreutils
     ];
     # Rust coreutils uses uutils-* names; GNU coreutils remains authoritative.
     programs.zsh = {

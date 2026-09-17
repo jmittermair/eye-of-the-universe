@@ -10,7 +10,6 @@
       kubectl-view-secret
       kubelogin
       stern
-      k9s
       kubernetes-helm
       helmfile
       kustomize
@@ -18,8 +17,6 @@
       kubeseal
       openshift
       kind
-      minikube
-      talosctl
       cilium-cli
       fluxcd
       argocd
