@@ -1,17 +1,17 @@
 {
   flake.modules.homeManager.development = { pkgs, ... }: {
     home.packages = with pkgs; [
-#      rustup
-#      cargo-nextest
-#      cargo-audit
-#      cargo-deny
-#      cargo-edit
-#      cargo-expand
-#      cargo-outdated
-#      cargo-machete
-#      bacon
-#      lldb
-#      clang
+      rustup
+      cargo-nextest
+      cargo-audit
+      cargo-deny
+      cargo-edit
+      cargo-expand
+      cargo-outdated
+      cargo-machete
+      bacon
+      lldb
+      clang
       pkg-config
       gnumake
       cmake
