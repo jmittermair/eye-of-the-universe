@@ -1,9 +1,16 @@
 { inputs, ... }:
+let
+  mangoFor =
+    system:
+    inputs.mango.packages.${system}.mango.overrideAttrs (old: {
+      patches = (old.patches or [ ]) ++ [ ../../patches/mango-floating-corners.patch ];
+    });
+in
 {
   flake.modules.nixos.desktop =
     { pkgs, ... }:
     let
-      mango = inputs.mango.packages.x86_64-linux.mango;
+      mango = mangoFor pkgs.stdenv.hostPlatform.system;
       session = pkgs.writeShellScript "mango-session" ''
         export XDG_CURRENT_DESKTOP=mango
         export XDG_SESSION_DESKTOP=mango
@@ -15,6 +22,7 @@
     {
       imports = [ inputs.mango.nixosModules.mango ];
       programs.mango.enable = true;
+      programs.mango.package = mango;
       services.greetd = {
         enable = true;
         settings.default_session = {
@@ -90,6 +98,7 @@
       wayland.systemd.target = "mango-session.target";
       wayland.windowManager.mango = {
         enable = true;
+        package = mangoFor pkgs.stdenv.hostPlatform.system;
         systemd.enable = true;
         systemd.xdgAutostart = true;
         # Nonempty autostart is needed for the upstream module to emit exec-once.
@@ -106,6 +115,9 @@
           trackpad_disable_while_typing = 1;
           borderpx = 2;
           border_radius = 6;
+          # Resize from the nearest corner without jumping the pointer.
+          drag_corner = 4;
+          drag_warp_cursor = 0;
           cursor_size = 32;
           focused_opacity = 1.0;
           unfocused_opacity = 1.0;
@@ -126,6 +138,10 @@
           bordercolor = "0x45475aff";
           rootcolor = "0x1e1e2eff";
           tagrule = map (n: "id:${toString n},layout_name:tile") (lib.range 1 9);
+          windowrule = [
+            # Exact client IDs keep Steam games (steam_app_*) out of this rule.
+            "appid:^[Ss]team$,isfloating:1"
+          ];
           bind = [
             # Application launchers and this configuration's shortcut reference.
             "SUPER,Return,spawn,ghostty"
@@ -190,6 +206,9 @@
             "NONE,XF86AudioPlay,spawn,playerctl play-pause"
             "NONE,XF86AudioNext,spawn,playerctl next"
             "NONE,XF86AudioPrev,spawn,playerctl previous"
+
+            # Hardware keys
+            "NONE,XF86PowerOff, spawn, swaylock -f"
           ]
           ++ lib.concatMap (n: [
             "SUPER,${toString n},view,${toString n},0"
@@ -366,7 +385,9 @@
           };
         };
       };
-      programs.swaylock.enable = true;
+      programs.swaylock = {
+      	enable = true;
+      };
       services.swayidle = {
         enable = true;
         systemdTargets = [ "mango-session.target" ];

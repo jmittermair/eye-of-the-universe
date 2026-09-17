@@ -1,0 +1,127 @@
+--- a/src/input/pointer.c
++++ b/src/input/pointer.c
+@@ -763,6 +763,25 @@
+ 						   dy);
+ }
+ 
++/* Keep the grab target usable at fractional output scales. Only corners of
++ * the topmost floating client participate; ordinary content clicks pass through. */
++static int pointer_floating_corner(Client *c, double x, double y) {
++	if (!c || !c->isfloating || c->isfullscreen || c->ismaximizescreen ||
++		client_is_unmanaged(c) || !c->mon || c->mon->isoverview ||
++		server.session_locked || server.exclusive_focus || server.seat->drag)
++		return -1;
++
++	double cx = x - c->geom.x, cy = y - c->geom.y;
++	int width = c->geom.width, height = c->geom.height;
++	if (cx < 0 || cy < 0 || cx >= width || cy >= height)
++		return -1;
++	int grip = 12;
++	if ((cx >= grip && cx < width - grip) ||
++		(cy >= grip && cy < height - grip))
++		return -1;
++	return (cx >= width / 2.0 ? 1 : 0) + (cy >= height / 2.0 ? 2 : 0);
++}
++
+ void pointer_resize_floating_window(Client *gc, double x, double y) {
+ 	int cdx = (int)round(x) - server.grab_offset_x;
+ 	int cdy = (int)round(y) - server.grab_offset_y;
+@@ -1057,6 +1076,15 @@
+ 		}
+ 	}
+ 
++	int corner = pointer_floating_corner(c, server.cursor->x, server.cursor->y);
++	if (corner >= 0 && server.cursor_mode == CurNormal &&
++		!keyboard_hard_modifiers() && !server.cursor_hidden) {
++		const char *cursors[] = {"nw-resize", "ne-resize", "sw-resize", "se-resize"};
++		wlr_seat_pointer_notify_clear_focus(server.seat);
++		wlr_cursor_set_xcursor(server.cursor, server.cursor_manager, cursors[corner]);
++		return;
++	}
++
+ 	/* If there's no client surface under the cursor, set the cursor image
+ 	 * to a default. This is what makes the cursor image appear when you
+ 	 * move it off of a client or over its border. */
+@@ -1428,8 +1456,24 @@
+ 			return true;
+ 		}
+ 
+-		node_at_point(server.cursor->x, server.cursor->y, &surface, NULL, NULL,
++		node_at_point(server.cursor->x, server.cursor->y, &surface, &c, NULL,
+ 					  &gb, NULL, NULL);
++		int corner = pointer_floating_corner(c, server.cursor->x, server.cursor->y);
++		if (event->button == BTN_LEFT && corner >= 0 &&
++			!keyboard_hard_modifiers()) {
++			client_focus(c, 1);
++			int old_corner = config.drag_corner, old_warp = config.drag_warp_cursor;
++			config.drag_corner = corner;
++			config.drag_warp_cursor = 0;
++			bool started = pointer_begin_move_resize(c, CurResize,
++				server.cursor->x, server.cursor->y);
++			config.drag_corner = old_corner;
++			config.drag_warp_cursor = old_warp;
++			if (started) {
++				wlr_seat_pointer_notify_clear_focus(server.seat);
++				return true;
++			}
++		}
+ 		if (toplevel_from_wlr_surface(surface, &c, &l) >= 0) {
+ 			if (c && c->scene && c->scene->node.enabled &&
+ 				VISIBLEON(c, c->mon) &&
+--- a/include/mango/manage/client.h
++++ b/include/mango/manage/client.h
+@@ -94,6 +94,7 @@
+ 	struct wl_listener unmap;
+ 	struct wl_listener destroy;
+ 	struct wl_listener set_title;
++	struct wl_listener set_class;
+ 	struct wl_listener fullscreen;
+ #ifdef XWAYLAND
+ 	struct wl_listener activate;
+--- a/src/manage/client.c
++++ b/src/manage/client.c
+@@ -2415,6 +2415,7 @@
+ 		wl_list_remove(&c->configure.link);
+ 		wl_list_remove(&c->dissociate.link);
+ 		wl_list_remove(&c->set_hints.link);
++		wl_list_remove(&c->set_class.link);
+ 	} else
+ #endif
+ 	{
+@@ -4282,6 +4283,27 @@
+ 	}
+ }
+ 
++/* Some X11 clients publish WM_CLASS after mapping. Apply the explicit floating
++ * preference then, without resetting tags, geometry, or other window rules. */
++static void handle_xwayland_surface_set_class(struct wl_listener *listener,
++											void *data) {
++	Client *c = wl_container_of(listener, c, set_class);
++	struct wlr_surface *surface = client_surface(c);
++	if (!surface || !surface->mapped || !c->mon || c->iskilling ||
++		client_is_unmanaged(c) || c->isfullscreen || c->ismaximizescreen)
++		return;
++	const char *appid = client_get_appid(c), *title = client_get_title(c);
++	int floating = -1;
++	for (uint32_t i = 0; i < config.window_rules_count; i++) {
++		const ConfigWinRule *r = &config.window_rules[i];
++		if (!r->is_once && r->isfloating >= 0 &&
++			is_window_rule_matches(r, appid, title))
++			floating = r->isfloating;
++	}
++	if (floating >= 0 && floating != c->isfloating)
++		client_set_floating(c, floating);
++}
++
+ void handle_new_xwayland_surface(struct wl_listener *listener, void *data) {
+ 	struct wlr_xwayland_surface *xsurface = data;
+ 	Client *c = NULL;
+@@ -4305,6 +4327,8 @@
+ 	LISTEN(&xsurface->events.set_hints, &c->set_hints,
+ 		   handle_xwayland_surface_set_hints);
+ 	LISTEN(&xsurface->events.set_title, &c->set_title, handle_client_set_title);
++	LISTEN(&xsurface->events.set_class, &c->set_class,
++		   handle_xwayland_surface_set_class);
+ 	LISTEN(&xsurface->events.request_maximize, &c->maximize,
+ 		   handle_client_request_maximize);
+ 	LISTEN(&xsurface->events.request_minimize, &c->minimize,

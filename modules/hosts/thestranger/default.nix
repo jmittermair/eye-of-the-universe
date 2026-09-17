@@ -9,6 +9,7 @@ in
       nixos.base
       nixos.desktop
       nixos.gaming
+      nixos.security
       nixos.virtualisation
       nixos.vpn
       nixos.styling

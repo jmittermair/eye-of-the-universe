@@ -118,6 +118,25 @@
       # Set a password with nixos-enter/passwd during installation.
       # Keep mutableUsers enabled so that password survives rebuilds.
     };
+    security.sudo.extraRules = [
+      {
+        users = [ "vechs" ];
+        commands = [
+          {
+            command = "/run/current-system/sw/bin/nix-env";
+            options = [ "NOPASSWD" ];
+          }
+          {
+            command = "/run/current-system/*/bin/switch-to-configuration";
+            options = [ "NOPASSWD" ];
+          }
+          {
+            command = "/run/current-system/*/bin/nh os switch";
+            options = [ "NOPASSWD" ];
+          }
+        ];
+      }
+    ];
     home-manager = {
       useGlobalPkgs = true;
       useUserPackages = true;

@@ -132,6 +132,14 @@ picker through its dmenu interface. Cliphist owns clipboard history; awww owns
 wallpaper; gammastep owns gamma adjustment. Noctalia's overlapping services and
 application theme writing are disabled so Stylix remains authoritative.
 
+Steam starts floating. `patches/mango-floating-corners.patch` adds plain left-drag
+corner resizing and reapplies floating rules when an X11 window publishes its
+application class after opening. The same patched Mango package is used for the
+login session and Home Manager. After changing the patch, rebuild and log out/in;
+a config reload cannot replace the running compositor. `tests/mango-corners.py`
+tests all four corners at 150% scaling, early/late Steam identities, and game
+exclusions in a separate headless session (see its usage docstring).
+
 See [SHORTCUTS.md](SHORTCUTS.md) for the complete keyboard and mouse reference,
 or press **Super+F1** to open it in Ghostty. Common entry points are Super+Enter
 for the terminal, Super+Space for Noctalia's launcher, Super+comma for its control centre, and

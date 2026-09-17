@@ -46,6 +46,9 @@ Keyboard resizing is intended for floating windows; tiled geometry is controlled
 by the active layout. Workspaces start in the tile layout. Window swapping uses
 arrow keys so that **Super+Shift+L** remains the lock shortcut.
 
+Steam client windows start floating. Add more application IDs to `windowrule` in
+`modules/features/desktop.nix` to give other apps the same default.
+
 ## Workspaces and monitors
 
 | Shortcut | Action |
@@ -102,7 +105,8 @@ the key symbols emitted by your keyboard.
 | Gesture | Action |
 | --- | --- |
 | Super+left-button drag | Move a window |
-| Super+right-button drag | Resize a window |
+| Super+right-button drag | Resize a floating window from the nearest corner |
+| Left-button drag at a floating window corner | Resize from that corner (no modifier) |
 | Click a Waybar task icon | Activate that window |
 | Middle-click a Waybar task icon | Close that window |
 | Click Waybar's idle-inhibitor icon | Toggle inhibition of idle locking |
@@ -111,6 +115,12 @@ the key symbols emitted by your keyboard.
 
 Idle inhibition does not replace the explicit lock shortcut or the lock before
 sleep. Swayidle normally locks after ten minutes.
+
+Floating windows have a 12-pixel grab area at each corner, with a diagonal resize
+cursor. Drag with the left button; no Super key is needed. **Super+right-button
+drag** also works from anywhere inside the window, using the nearest corner.
+The pointer stays where you grabbed it. These corner handles come from the local
+Mango patch; after first installing it, log out and back in to run the new binary.
 
 ## Changing bindings
 
