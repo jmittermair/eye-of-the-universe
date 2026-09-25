@@ -17,10 +17,10 @@
       grim
       slurp
       grimblast
-      pavucontrol
       playerctl
       brightnessctl
       libnotify
+      obsidian
     ];
     programs.firefox = {
       enable = true;

@@ -177,6 +177,41 @@ Cliphist persists copied content under your encrypted home. Use `cliphist wipe`
 to clear it. Avoid putting secrets into clipboard history; configure Bitwarden's
 clipboard clearing and test your password-copy workflow.
 
+## Sound and session recording
+
+`modules/features/sound.nix` provides PipeWire, WirePlumber, PulseAudio client
+compatibility, ALSA (including 32-bit applications), and JACK. PipeWire supplies
+the PulseAudio server; a separate PulseAudio daemon is disabled.
+
+The persistent **D&D Recording Mix** sink combines the default microphone with
+the default output's monitor. **D&D Recording** exposes that mix as a stereo
+microphone for recording applications. Speaker left/right stay separate; a mono
+microphone is mixed into both channels. Normal playback still goes to the speakers.
+The mix is independent of Easy Effects and uses the unprocessed default microphone.
+
+After rebuilding with `nh os switch`, log out and back in. Select **D&D Recording**
+as your recording application's input (or use `pavucontrol`'s Recording tab while
+it is recording). Keep the physical microphone and speakers/headphones as system
+defaults: choosing either D&D device as a default can create a feedback loop.
+Use headphones to keep speaker sound from being captured a second time acoustically.
+Adjust the two D&D playback streams in `pavucontrol` if the combined signal clips.
+The mix includes all audio on the default output, including notifications.
+
+Easy Effects starts with two presets:
+
+- **microphone-noise-reduction** uses RNNoise's built-in model. Choose **Easy Effects
+  Source** in an application's input selector to use the denoised microphone.
+  Automatic input rerouting is disabled so it preserves your recording mix selection.
+- **fw13-easy-effects** loads the supplied [Framework speaker preset](https://github.com/FrameworkComputer/linux-docs/blob/main/easy-effects/fw13-easy-effects.json),
+  including its required impulse response. Playback is processed automatically.
+  Bypass the output effects when using headphones or external speakers; this preset
+  is tuned for the Framework speakers.
+
+Presets and the impulse response are installed under `~/.local/share/easyeffects/`.
+The vendored Framework files live in `assets/easyeffects/`; duplicate a preset in
+Easy Effects before customising it, since Home Manager owns these preset files.
+Check `wpctl status` and `systemctl --user status easyeffects` after activation.
+
 ## Gaming
 
 Steam, GE-Proton, Lutris, Heroic, Wine staging, Winetricks, Protontricks, Gamescope,

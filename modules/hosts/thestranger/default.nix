@@ -8,6 +8,7 @@ in
     modules = [
       nixos.base
       nixos.desktop
+      nixos.sound
       nixos.gaming
       nixos.security
       nixos.virtualisation
@@ -43,6 +44,7 @@ in
         home-manager.users.vechs.imports = [
           home.base
           home.desktop
+          home.sound
           home.shell
           home.development
           home.kubernetes

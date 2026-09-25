@@ -15,6 +15,8 @@
       });
     '';
     security.pam.services.sudo.fprintAuth = true;
+    security.pam.services.swaylock.rules.auth.fprintd.order = config.security.pam.services.swaylock.rules.auth.unix.order + 50;
+    security.pam.services.swaylock.rules.auth.fprintd.settings.timeout = 10;
     services.fprintd.enable = true;
     services.logind.settings.Login.HandlePowerKey = "ignore";
   };
